@@ -4,11 +4,11 @@ import numpy as np
 
   
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+predictor = dlib.shape_predictor('blink_eyes_detection_prevention_eyedisease/shape_predictor_68_face_landmarks.dat')
 
 
 #cap = cv.imread('C:/Users/hw/Desktop/trump.png', 1)
-cap = cv.imread('dataset/with_mask/0-with-mask.jpg', 1)
+cap = cv.imread('blink_eyes_detection_prevention_eyedisease/dataset/with_mask/0-with-mask.jpg', 1)
 #cap = cv.imread('dataset/without_mask/0.jpg', 1)
 
 
