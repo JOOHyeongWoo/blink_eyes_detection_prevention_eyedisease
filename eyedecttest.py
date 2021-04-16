@@ -7,6 +7,10 @@ IMG_SIZE = (34, 26)
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('blink_eyes_detection_prevention_eyedisease/shape_predictor_68_face_landmarks.dat')
 
+RIGHT_EYE = list(range(36, 42))  
+LEFT_EYE = list(range(42, 48)) 
+index = LEFT_EYE + RIGHT_EYE
+
 
 
 def crop_eye(img, eye_points):
@@ -61,10 +65,23 @@ while cap.isOpened():
 
     eye_input_l = eye_img_l.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
     eye_input_r = eye_img_r.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
+ 
+    shape = predictor(gray, face)
+    list_points = []
+    for p in shape.parts():
+        list_points.append([p.x, p.y])
+
+    list_points = np.array(list_points)
 
 
-    cv2.rectangle(img, pt1=tuple(eye_rect_l[0:2]), pt2=tuple(eye_rect_l[2:4]), color=(255,255,255), thickness=2)
-    cv2.rectangle(img, pt1=tuple(eye_rect_r[0:2]), pt2=tuple(eye_rect_r[2:4]), color=(255,255,255), thickness=2)
+    for i,pt in enumerate(list_points[index]):
+
+        pt_pos = (pt[0], pt[1])
+        cv2.circle(img, pt_pos, 2, (0, 255, 0), -1)
+
+
+    #cv2.rectangle(img, pt1=tuple(eye_rect_l[0:2]), pt2=tuple(eye_rect_l[2:4]), color=(255,255,255), thickness=2)
+    #cv2.rectangle(img, pt1=tuple(eye_rect_r[0:2]), pt2=tuple(eye_rect_r[2:4]), color=(255,255,255), thickness=2)
 
 
   cv2.imshow('result', img)
