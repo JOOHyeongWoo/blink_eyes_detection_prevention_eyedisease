@@ -12,7 +12,10 @@ cap = cv.imread('blink_eyes_detection_prevention_eyedisease/dataset/with_mask/0-
 #cap = cv.imread('dataset/without_mask/0.jpg', 1)
 
 
- 
+
+RIGHT_EYE = list(range(36, 42))  
+LEFT_EYE = list(range(42, 48)) 
+'''
 ALL = list(range(0, 68)) 
 RIGHT_EYEBROW = list(range(17, 22))  
 LEFT_EYEBROW = list(range(22, 27))  
@@ -22,8 +25,9 @@ NOSE = list(range(27, 36))
 MOUTH_OUTLINE = list(range(48, 61))  
 MOUTH_INNER = list(range(61, 68)) 
 JAWLINE = list(range(0, 17)) 
-
+'''
 index = LEFT_EYE + RIGHT_EYE
+
 #index = ALL
 '''
 while True:
