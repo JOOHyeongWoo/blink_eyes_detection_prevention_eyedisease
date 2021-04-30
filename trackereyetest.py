@@ -47,7 +47,7 @@ if __name__ == '__main__' :
     # 트레킹 함수 선택
     tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'GOTURN']
     # 기본 KCF(Kernelized Correlation Filters)가 속도가 빠르다.
-    tracker_type = tracker_types[2]
+    tracker_type = tracker_types[1]
 
     # OpenCV 서브 버전별 함수 호출명이 다르다.
     if int(minor_ver) < 3:
