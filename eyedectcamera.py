@@ -49,6 +49,7 @@ while cap.isOpened():
 
   img = img_ori.copy()
   gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+  grayframe = cv2.equalizeHist(gray)
 
   faces = detector(gray)
 
