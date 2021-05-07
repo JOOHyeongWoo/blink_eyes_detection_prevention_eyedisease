@@ -14,8 +14,7 @@ y_train = np.load('dataset/y_train.npy').astype(np.float32)
 x_val = np.load('dataset/x_val.npy').astype(np.float32)
 y_val = np.load('dataset/y_val.npy').astype(np.float32)
 
-print(x_train.shape, y_train.shape)
-print(x_val.shape, y_val.shape)
+
 
 
 ################ Data Augmentation ##########################3
@@ -60,6 +59,12 @@ net = Dense(512)(net)
 net = Activation('relu')(net)
 net = Dense(1)(net)
 outputs = Activation('sigmoid')(net)
+
+model = Model(inputs=inputs, outputs=outputs)
+
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
+
+model.summary()
 
 
 ################ TRAIN ##########################3
