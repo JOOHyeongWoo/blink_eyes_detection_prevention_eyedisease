@@ -2,6 +2,8 @@ import cv2, dlib
 import numpy as np
 from imutils import face_utils
 import sys
+#from keras.models import load_model
+
 
 IMG_SIZE = (34, 26)
 def crop_eye(img, eye_points):
@@ -122,7 +124,7 @@ if __name__ == '__main__' :
                 #인식된 얼굴 표시 순식간에 지나가서 거의 볼수 없음(녹색)
                 cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),3, 4, 0)
                 #추적 상태를 추적 초기화로 변경
-                TrackingState = TRACKING_STATE_ON
+                TrackingState = TRACKING_STATE_INIT
                 print('det w : %d ' % w + 'h : %d ' % h)
                 ok = tracker.init(frame, TrackingROI)
 
