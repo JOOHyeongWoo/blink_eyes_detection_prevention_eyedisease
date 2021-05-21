@@ -1,19 +1,15 @@
 import cv2, dlib
 import numpy as np
 from imutils import face_utils
-
-
+from keras.models import load_model
 
 IMG_SIZE = (34, 26)
 
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+predictor = dlib.shape_predictor('blink_eyes_detection_prevention_eyedisease/shape_predictor_68_face_landmarks.dat')
 
-RIGHT_EYE = list(range(36, 42))  
-LEFT_EYE = list(range(42, 48)) 
-index = LEFT_EYE + RIGHT_EYE
-
-
+model = load_model('blink_eyes_detection_prevention_eyedisease/models/2021_05_14_11_27_50.h5')
+model.summary()
 
 def crop_eye(img, eye_points):
   x1, y1 = np.amin(eye_points, axis=0)
@@ -35,17 +31,20 @@ def crop_eye(img, eye_points):
   return eye_img, eye_rect
 
 # main
-#cap = cv2.VideoCapture('blink_eyes_detection_prevention_eyedisease/testeyedection/eyewithmask.mp4')
-#cap = cv2.VideoCapture('blink_eyes_detection_prevention_eyedisease/testeyedection/eyewithoutmask.mp4')
 cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+#cap = cv2.VideoCapture('blink_eyes_detection_prevention_eyedisease/testsample/1.mp4')
 
+
+countnum = 0
 while cap.isOpened():
   ret, img_ori = cap.read()
 
   if not ret:
     break
 
-  img_ori = cv2.resize(img_ori, dsize=(0, 0), fx=0.8, fy=0.8)
+  #img_ori = cv2.resize(img_ori, dsize=(0, 0), fx=0.1, fy=0.1, interpolation=cv2.INTER_AREA)
+  #img_ori = cv2.resize(img_ori, dsize=(640, 480), interpolation=cv2.INTER_AREA)
+  #img_ori = cv2.resize(img_ori, dsize=(640, 480))
 
   img = img_ori.copy()
   gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -69,25 +68,32 @@ while cap.isOpened():
 
     eye_input_l = eye_img_l.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
     eye_input_r = eye_img_r.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
- 
-    shape = predictor(gray, face)
-    list_points = []
-    for p in shape.parts():
-        list_points.append([p.x, p.y])
 
-    list_points = np.array(list_points)
+    pred_l = model.predict(eye_input_l)
+    pred_r = model.predict(eye_input_r)
 
+    #print(pred_l)
 
-    for i,pt in enumerate(list_points[index]):
+    # visualize
+    state_l = 'O %.1f' if pred_l > 0.1 else '1 %.1f'
+    state_r = 'O %.1f' if pred_r > 0.1 else '1 %.1f'
 
-        pt_pos = (pt[0], pt[1])
-        cv2.circle(img, pt_pos, 2, (0, 255, 0), -1)
+    state_l = state_l % pred_l
+    state_r = state_r % pred_r
 
-
-    #cv2.rectangle(img, pt1=tuple(eye_rect_l[0:2]), pt2=tuple(eye_rect_l[2:4]), color=(255,255,255), thickness=2)
-    #cv2.rectangle(img, pt1=tuple(eye_rect_r[0:2]), pt2=tuple(eye_rect_r[2:4]), color=(255,255,255), thickness=2)
+    if pred_l == 0 :
+      print("dddddddddddddddddd")
 
 
+    cv2.rectangle(img, pt1=tuple(eye_rect_l[0:2]), pt2=tuple(eye_rect_l[2:4]), color=(255,255,255), thickness=2)
+    cv2.rectangle(img, pt1=tuple(eye_rect_r[0:2]), pt2=tuple(eye_rect_r[2:4]), color=(255,255,255), thickness=2)
+
+    cv2.putText(img, state_l, tuple(eye_rect_l[0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
+    cv2.putText(img, state_r, tuple(eye_rect_r[0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
+
+   
+
+  #img = cv2.resize(img, dsize=(0, 0), fx=0.3, fy=0.3)
   cv2.imshow('result', img)
   if cv2.waitKey(1) == ord('q'):
     break

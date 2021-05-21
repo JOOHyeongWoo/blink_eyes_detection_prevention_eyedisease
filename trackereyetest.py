@@ -71,7 +71,8 @@ if __name__ == '__main__' :
             tracker = cv2.TrackerGOTURN_create()
 
     #카메라 열기
-    video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+    #video = cv2.VideoCapture(0,cv2.CAP_DSHOW)
+    video = cv2.VideoCapture('blink_eyes_detection_prevention_eyedisease/testsample/two_blink_withoutmask.mp4')
 
     #카메라가 정상적으로 열리지 않았다면 프로그램 종료
     if not video.isOpened():
@@ -165,6 +166,8 @@ if __name__ == '__main__' :
 
         #화면에 카메라 영상 표시
         #추적된 박스가 있으면 같이 표시됨
+
+        frame = cv2.resize(frame, dsize=(0, 0), fx=0.3, fy=0.3)
         cv2.imshow("Tracking", frame)
 
         #ESC키를 누르면 break로 종료

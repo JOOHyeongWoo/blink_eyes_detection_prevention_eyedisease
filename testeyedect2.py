@@ -5,7 +5,7 @@ scaler = 1
 
 
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+predictor = dlib.shape_predictor('blink_eyes_detection_prevention_eyedisease/shape_predictor_68_face_landmarks.dat')
 
 
 img = cv2.imread('C:/Users/hw/Desktop/trump.png', 1)
