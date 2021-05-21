@@ -50,7 +50,7 @@ while cap.isOpened():
   gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
   grayframe = cv2.equalizeHist(gray)
 
-  faces = detector(gray)
+  faces = detector(grayframe)
 
   for face in faces:
     shapes = predictor(gray, face)
