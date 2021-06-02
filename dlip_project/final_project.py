@@ -107,7 +107,7 @@ while cap.isOpened():
 
     state_l = 'open %.2f' if repred_l > 0.1*max_l else 'closed %.2f'
     state_r = 'open %.2f' if repred_r > 0.1*max_r else 'closed %.2f'
-
+    #print( repred_l, repred_r)
     #state_l = 'open %.2f' if repred_l > 0.02 else 'closed %.2f'
     #state_r = 'open %.2f' if repred_r > 0.02 else 'closed %.2f'
 

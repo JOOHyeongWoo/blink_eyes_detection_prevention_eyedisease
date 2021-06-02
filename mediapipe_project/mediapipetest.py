@@ -83,7 +83,9 @@ if __name__ == '__main__':
     max_l = 0
     max_r =0
     start = time.time()
-
+    sum_l =0
+    sum_r=0
+    countnum=0
 
     while cap.isOpened():
         ret, image = cap.read()
@@ -93,10 +95,13 @@ if __name__ == '__main__':
             eye_list.append(int(eye_cnt / 2))
             break
 
+        check_setting = False
+
        
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         results = face_mesh.process(image)
+        #results = face_mesh.process(gray)
 
        
         image.flags.writeable = True
@@ -141,26 +146,35 @@ if __name__ == '__main__':
                 cv2.putText(eye_image, settime, (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
                 max_l = pred_l if pred_l > max_l else max_l
                 max_r = pred_r if pred_r > max_r else max_r
+                sum_l += pred_l
+                sum_r += pred_r
+                countnum +=1
             elif check_setting == False:
                 cv2.putText(eye_image, "check setting", (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
                 max_l = 0
                 max_r = 0
                 timepoint =1
         elif settingOK == True :
-      
-            repred_l = pred_l * (1/max_l)
-            repred_r = pred_r * (1/max_r)
+            
+            max_l = sum_l/countnum
+            max_r = sum_r/countnum
 
-            state_l = 'open %.2f' if repred_l > 0.1*max_l else 'closed %.2f'
-            state_r = 'open %.2f' if repred_r > 0.1*max_r else 'closed %.2f'
+            repred_l = pred_l #* (1/max_l)
+            repred_r = pred_r #* (1/max_r)
+            predsize = 0.1
+
+            state_l = 'open %.2f' if repred_l > (predsize*max_l) else 'closed %.2f'
+            state_r = 'open %.2f' if repred_r > (predsize*max_r) else 'closed %.2f'
 
             #state_l = 'open %.2f' if repred_l > 0.02 else 'closed %.2f'
             #state_r = 'open %.2f' if repred_r > 0.02 else 'closed %.2f'
+            #print( repred_l, repred_r)
+            #print( pred_l, pred_r)
 
-            if repred_l <0.1*max_l and repred_r <0.1*max_r and checkOpen == True :
+            if repred_l <predsize*max_l and repred_r <predsize*max_r and checkOpen == True :
                 checkOpen = False
                 closedEyenum += 1
-            elif repred_l >0.1*max_l and repred_r >0.1*max_r and checkOpen == False :
+            elif repred_l >predsize*max_l and repred_r >predsize*max_r and checkOpen == False :
                 checkOpen = True
 
             state_l = state_l % repred_l
