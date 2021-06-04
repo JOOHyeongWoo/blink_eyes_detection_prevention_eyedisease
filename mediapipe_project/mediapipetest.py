@@ -7,7 +7,9 @@ from scipy.spatial import distance
 import time
 
 IMG_SIZE = (34, 26)
-model = load_model('blink_eyes_detection_prevention_eyedisease/models/2021_05_14_11_27_50.h5')
+
+model = load_model('blink_eyes_detection_prevention_eyedisease/models/2021_06_04_09_47_46.h5')
+model.summary()
 
 class Eye_check:
     def __init__(self):
@@ -80,12 +82,14 @@ if __name__ == '__main__':
     checkOpen = True
     closedEyenum = 0
     timepoint = 1
-    max_l = 0
-    max_r =0
+    max_l = 0.1
+    max_r =0.1
     start = time.time()
     sum_l =0
     sum_r=0
     countnum=0
+    min_l =1
+    min_r =1
 
     while cap.isOpened():
         ret, image = cap.read()
@@ -113,21 +117,27 @@ if __name__ == '__main__':
         if results.multi_face_landmarks:
          
             idx_to_coordinates = check.landmark_dict(results)
-            #check.eye_drawing(idx_to_coordinates)
+            check.eye_drawing(idx_to_coordinates)
 
            
             eye_np = check.to_ndarray(idx_to_coordinates)
 
             
-            eye_img_l, eye_rect_l = check.crop_eye(gray, eye_points=eye_np[0:16])  
-            eye_img_r, eye_rect_r = check.crop_eye(gray, eye_points=eye_np[16:32])  
+            eye_img_l, eye_rect_l = check.crop_eye(gray, eye_points=eye_np[3:13])  
+            eye_img_r, eye_rect_r = check.crop_eye(gray, eye_points=eye_np[19:29])  
             
             eye_img_l = cv2.resize(eye_img_l, dsize=IMG_SIZE)
             eye_img_r = cv2.resize(eye_img_r, dsize=IMG_SIZE)
             eye_img_r = cv2.flip(eye_img_r, flipCode=1)
 
+            #cv2.imshow('l', eye_img_l)
+            #cv2.imshow('r', eye_img_r)
+
             eye_input_l = eye_img_l.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
             eye_input_r = eye_img_r.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
+            #eye_input_l = eye_img_l.reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
+            #eye_input_r = eye_img_r.reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
+            
 
             pred_l = model.predict(eye_input_l)
             pred_r = model.predict(eye_input_r)
@@ -146,14 +156,18 @@ if __name__ == '__main__':
                 cv2.putText(eye_image, settime, (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
                 max_l = pred_l if pred_l > max_l else max_l
                 max_r = pred_r if pred_r > max_r else max_r
+                min_l = pred_l if pred_l < min_l else min_l
+                min_r = pred_r if pred_r < min_r else min_r
                 sum_l += pred_l
                 sum_r += pred_r
                 countnum +=1
             elif check_setting == False:
                 cv2.putText(eye_image, "check setting", (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
-                max_l = 0
-                max_r = 0
+                max_l = 0.1
+                max_r = 0.1
                 timepoint =1
+                min_l=1.0
+                min_r =1.0
         elif settingOK == True :
             
             max_l = sum_l/countnum
@@ -161,20 +175,24 @@ if __name__ == '__main__':
 
             repred_l = pred_l #* (1/max_l)
             repred_r = pred_r #* (1/max_r)
-            predsize = 0.1
+            predsize_l = 0.1 #(1 -max_l) *0.9
+            predsize_r = 0.1 #(1 -max_r) *0.9
 
-            state_l = 'open %.2f' if repred_l > (predsize*max_l) else 'closed %.2f'
-            state_r = 'open %.2f' if repred_r > (predsize*max_r) else 'closed %.2f'
+            state_l = 'open %.2f' if repred_l > predsize_l*max_l  else 'close %.2f'
+            state_r = 'open %.2f' if repred_r > predsize_r*max_r  else 'close %.2f'
+            
+            #state_l = 'open %.2f' if repred_l > predsize*max_l+min_l else 'closed %.2f'
+            #state_r = 'open %.2f' if repred_r > predsize*max_r+min_r else 'closed %.2f'
 
-            #state_l = 'open %.2f' if repred_l > 0.02 else 'closed %.2f'
-            #state_r = 'open %.2f' if repred_r > 0.02 else 'closed %.2f'
+            #state_l = 'open %.2f' if repred_l > predsize else 'closed %.2f'
+            #state_r = 'open %.2f' if repred_r > predsize else 'closed %.2f'
             #print( repred_l, repred_r)
             #print( pred_l, pred_r)
 
-            if repred_l <predsize*max_l and repred_r <predsize*max_r and checkOpen == True :
+            if repred_l <predsize_l*max_l and repred_r <predsize_r*max_r and checkOpen == True :
                 checkOpen = False
                 closedEyenum += 1
-            elif repred_l >predsize*max_l and repred_r >predsize*max_r and checkOpen == False :
+            elif repred_l >predsize_l*max_l and repred_r >predsize_r*max_r and checkOpen == False :
                 checkOpen = True
 
             state_l = state_l % repred_l
@@ -199,4 +217,5 @@ if __name__ == '__main__':
     face_mesh.close()
     cap.release()
     print( max_l, max_r)
+    #print( predsize_l*max_l, predsize_r*max_r)
     cv2.destroyAllWindows()

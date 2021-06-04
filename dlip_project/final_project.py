@@ -9,7 +9,7 @@ IMG_SIZE = (34, 26)
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('blink_eyes_detection_prevention_eyedisease/shape_predictor_68_face_landmarks.dat')
 
-model = load_model('blink_eyes_detection_prevention_eyedisease/models/2021_05_14_11_27_50.h5')
+model = load_model('blink_eyes_detection_prevention_eyedisease/models/2021_06_04_09_47_46.h5')
 model.summary()
 
 def crop_eye(img, eye_points):
@@ -57,7 +57,7 @@ while cap.isOpened():
   gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
   grayframe = cv2.equalizeHist(gray)
 
-  faces = detector(grayframe)
+  faces = detector(gray)
 
   for face in faces:
     shapes = predictor(gray, face)
@@ -70,11 +70,15 @@ while cap.isOpened():
     eye_img_r = cv2.resize(eye_img_r, dsize=IMG_SIZE)
     eye_img_r = cv2.flip(eye_img_r, flipCode=1)
 
-    cv2.imshow('l', eye_img_l)
-    cv2.imshow('r', eye_img_r)
+    
+    #eye_l = cv2.equalizeHist(eye_img_l)
+    #eye_r = cv2.equalizeHist(eye_img_r)
+    #cv2.imshow('l', eye_img_l)
+    #cv2.imshow('r', eye_img_r)
 
     eye_input_l = eye_img_l.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
     eye_input_r = eye_img_r.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
+    
 
     pred_l = model.predict(eye_input_l)
     pred_r = model.predict(eye_input_r)
@@ -102,8 +106,8 @@ while cap.isOpened():
   elif settingOK == True :
       
 
-    repred_l = pred_l * (1/max_l)
-    repred_r = pred_r * (1/max_r)
+    repred_l = pred_l #* (1/max_l)
+    repred_r = pred_r #* (1/max_r)
 
     state_l = 'open %.2f' if repred_l > 0.1*max_l else 'closed %.2f'
     state_r = 'open %.2f' if repred_r > 0.1*max_r else 'closed %.2f'
@@ -127,7 +131,7 @@ while cap.isOpened():
 
     state_l = state_l % repred_l
     state_r = state_r % repred_r
-
+    print( pred_l, pred_r)
     
 
     cv2.rectangle(img, pt1=tuple(eye_rect_l[0:2]), pt2=tuple(eye_rect_l[2:4]), color=(255,255,255), thickness=2)
