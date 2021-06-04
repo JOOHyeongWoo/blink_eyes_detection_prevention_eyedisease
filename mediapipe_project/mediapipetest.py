@@ -8,7 +8,7 @@ import time
 
 IMG_SIZE = (34, 26)
 
-model = load_model('blink_eyes_detection_prevention_eyedisease/models/2021_06_04_09_47_46.h5')
+model = load_model('blink_eyes_detection_prevention_eyedisease/models/2021_06_02_09_47_46.h5')
 model.summary()
 
 class Eye_check:
