@@ -7,9 +7,9 @@ import time
 IMG_SIZE = (34, 26)
 
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor('blink_eyes_detection_prevention_eyedisease/shape_predictor_68_face_landmarks.dat')
+predictor = dlib.shape_predictor('blink_eyes_detection_prevention_eyedisease/check_blinkeye_model/shape_predictor_68_face_landmarks.dat')
 
-model = load_model('blink_eyes_detection_prevention_eyedisease/models/2021_06_02_09_47_46.h5')
+model = load_model('blink_eyes_detection_prevention_eyedisease/check_blinkeye_model/models/2021_06_02_09_47_46.h5')
 model.summary()
 
 def crop_eye(img, eye_points):

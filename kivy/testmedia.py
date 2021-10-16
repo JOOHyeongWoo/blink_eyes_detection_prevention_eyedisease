@@ -6,17 +6,25 @@ import numpy as np
 from keras.models import load_model
 import os
 from scipy.spatial import distance
+import threading
 import time
+from time import sleep
+
 
 
 IMG_SIZE = (34, 26)
 
-model = load_model('blink_eyes_detection_prevention_eyedisease/check_blinkeye_model/models/2021_06_02_09_47_46.h5')
+
+model = load_model('blink_eyes_detection_prevention_eyedisease/kivy/2021_06_02_09_47_46.h5')
 
 
 model.summary()
 
 class Eye_check:
+    programstate=True
+    max_blinknum_permin= 20
+    check_permin=1
+
     def __init__(self):
         self.VISIBILITY_THRESHOLD = 0.5
         self.PRESENCE_THRESHOLD = 0.5
@@ -26,7 +34,7 @@ class Eye_check:
             263, 249, 390, 373, 374, 380, 381, 382,
             362, 466, 388, 387, 386, 385, 384, 398
         ]
-        self.model = load_model('blink_eyes_detection_prevention_eyedisease/check_blinkeye_model/models/2021_06_02_09_47_46.h5')
+        self.model = load_model('blink_eyes_detection_prevention_eyedisease/kivy/2021_06_02_09_47_46.h5')
         self.IMG_SIZE = (34, 26)
         self.mp_drawing = mp.solutions.drawing_utils
 
@@ -54,7 +62,7 @@ class Eye_check:
 
   
     def eye_drawing(self, landmark_dict, eye_image):
-        for i in self.Landmark_eye:  # 눈 좌표값만 그리기
+        for i in self.Landmark_eye:  
             cv2.circle(eye_image, landmark_dict[i], 1, (0, 0, 255), -1)
     
 
@@ -69,8 +77,13 @@ class Eye_check:
                     face_landmark[idx] = landmark_px
         return face_landmark
 
+    def changeLabel(eyeself,self,closedEyenum):
+        self.get_screen('running').ids.check_eye_num.text= str(closedEyenum)
+        return
 
-    def checkblink():
+    def checkblink(self):
+        from main import WindowManager
+        from main import Running_window
         eye_cnt = 0
         frame = 0
         eye = 0
@@ -81,6 +94,8 @@ class Eye_check:
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         face_mesh = mp.solutions.face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5)
         check = Eye_check()
+
+        
 
         settingOK= False
         checkOpen = True
@@ -95,6 +110,9 @@ class Eye_check:
         min_l =1
         min_r =1
 
+        max_time_point=False
+
+        
         while cap.isOpened():
             ret, image = cap.read()
 
@@ -154,10 +172,12 @@ class Eye_check:
                         start = time.time()
                         timepoint = 0
                     elif time.time() - start > 5 :
-                        settingOK = True 
+                        settingOK = True
+                        max_time_point= True 
                     settime = time.time()-start
                     settime = str(settime)
-                    cv2.putText(eye_image, settime, (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+                    #cv2.putText(eye_image, settime, (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+                    #self.get_screen('running').ids.check_eye_num.text=  str(float(settime))
                     max_l = pred_l if pred_l > max_l else max_l
                     max_r = pred_r if pred_r > max_r else max_r
                     min_l = pred_l if pred_l < min_l else min_l
@@ -166,7 +186,7 @@ class Eye_check:
                     sum_r += pred_r
                     countnum +=1
                 elif check_setting == False:
-                    cv2.putText(eye_image, "check setting", (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+                    #cv2.putText(eye_image, "check setting", (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
                     max_l = 0.1
                     max_r = 0.1
                     timepoint =1
@@ -185,56 +205,78 @@ class Eye_check:
                 state_l = 'open %.2f' if repred_l > predsize_l*max_l  else 'close %.2f'
                 state_r = 'open %.2f' if repred_r > predsize_r*max_r  else 'close %.2f'
                 
-                #state_l = 'open %.2f' if repred_l > predsize*max_l+min_l else 'closed %.2f'
-                #state_r = 'open %.2f' if repred_r > predsize*max_r+min_r else 'closed %.2f'
-
-                #state_l = 'open %.2f' if repred_l > predsize else 'closed %.2f'
-                #state_r = 'open %.2f' if repred_r > predsize else 'closed %.2f'
-                #print( repred_l, repred_r)
-                #print( pred_l, pred_r)
 
                 if repred_l <predsize_l*max_l and repred_r <predsize_r*max_r and checkOpen == True :
                     checkOpen = False
                     closedEyenum += 1
+                    changelabel_thread = threading.Thread(target=check.changeLabel, args=(self,closedEyenum)) 
+                    changelabel_thread.setDaemon(True)
+                    changelabel_thread.start()
+                    print(closedEyenum)
+                    #self.get_screen('running').ids.check_eye_num.text= str(int(closedEyenum))
+
+
+                    #print(closedEyenum)
                 elif repred_l >predsize_l*max_l and repred_r >predsize_r*max_r and checkOpen == False :
                     checkOpen = True
 
                 state_l = state_l % repred_l
                 state_r = state_r % repred_r
 
+                if max_time_point== True:
+                    start=time.time()
+                    max_time_point= False
+                if time.time() -start> check.check_permin :
+                    if closedEyenum < check.max_blinknum_permin :
+                        notification_thread = threading.Thread(target=WindowManager.notification, args=(self,)) 
+                        notification_thread.setDaemon(True)
+                        notification_thread.start()
+                        start=time.time()
+                        closedEyenum = 0
+                        max_time_point= True
+                        print("ppppppppppppp")
             
-                cv2.rectangle(eye_image, pt1=tuple(eye_rect_l[0:2]), pt2=tuple(eye_rect_l[2:4]), color=(255, 255, 255), thickness=2)
-                cv2.rectangle(eye_image, pt1=tuple(eye_rect_r[0:2]), pt2=tuple(eye_rect_r[2:4]), color=(255, 255, 255), thickness=2)
+                #cv2.rectangle(eye_image, pt1=tuple(eye_rect_l[0:2]), pt2=tuple(eye_rect_l[2:4]), color=(255, 255, 255), thickness=2)
+                #cv2.rectangle(eye_image, pt1=tuple(eye_rect_r[0:2]), pt2=tuple(eye_rect_r[2:4]), color=(255, 255, 255), thickness=2)
 
             
-                cv2.putText(eye_image, str(state_l), tuple(eye_rect_l[0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-                cv2.putText(eye_image, str(state_r), tuple(eye_rect_r[0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                #cv2.putText(eye_image, str(state_l), tuple(eye_rect_l[0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                #cv2.putText(eye_image, str(state_r), tuple(eye_rect_r[0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
-                cv2.putText(eye_image, "closednum:"+ str(closedEyenum) , (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
+                #cv2.putText(eye_image, "closednum:"+ str(closedEyenum) , (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,0,0), 2)
 
-            cv2.imshow('MediaPipe EyeMesh', eye_image)  # 눈 인식 표시
+            #cv2.imshow('MediaPipe EyeMesh', eye_image)  # 눈 인식 표시
 
-            if cv2.waitKey(1) == ord('q'):
-                eye_list.append(int(eye_cnt / 2))
+            #if cv2.waitKey(1) == ord('q'):
+                #eye_list.append(int(eye_cnt / 2))
+                #break
+            #self.get_screen('running').ids.check_eye_num.text= str(int(closedEyenum))
+            
+            
+            
+            if check.programstate == False:
                 break
         
+        
+       
+
         face_mesh.close()
         cap.release()
-        print( max_l, max_r)
+        #print( max_l, max_r)
         #print( predsize_l*max_l, predsize_r*max_r)
-        cv2.destroyAllWindows()
+        #cv2.destroyAllWindows()
         return
  
         
         
 
 
-class MainApp(App):
+class MainAppp(App):
     def build(self):
         Eye_check.checkblink()
         #cam =Camera(play=True, resolution=(640,480))
         #return cam
 
 if __name__ == '__main__':
-    MainApp().run()
+    MainAppp().run()
     

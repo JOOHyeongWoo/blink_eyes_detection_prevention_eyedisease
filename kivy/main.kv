@@ -1,6 +1,7 @@
 WindowManager:
-    size: (400, 900)
+    size: (700, 500)
     Setting_window:
+        name: 'setting'
         BoxLayout:
             
             orientation: 'vertical'
@@ -35,11 +36,14 @@ WindowManager:
                         size: self.size
 
     Running_window:
+        name: 'running'
+        id: runningwindow
 
 
 
 <Setting_window>:
-    name: 'setting'
+    
+    
 
 
 
@@ -90,7 +94,8 @@ WindowManager:
     CheckBox:
         group: 'check_blink_time'
         size_hint: (0.3, 1)
-        on_active: root.on_checkbox(self, self.active)
+        active: True
+        on_active: root.on_checkbox(self, self.active, 1)
 
 
     Label:
@@ -98,7 +103,7 @@ WindowManager:
     CheckBox:
         group: 'check_blink_time'
         size_hint: (0.3, 1)
-        on_active: root.on_checkbox(self, self.active)
+        on_active: root.on_checkbox(self, self.active, 3)
 
 
     Label:
@@ -106,7 +111,7 @@ WindowManager:
     CheckBox:
         group: 'check_blink_time'
         size_hint: (0.3, 1)
-        on_active: root.on_checkbox(self, self.active)
+        on_active: root.on_checkbox(self, self.active,  5)
 
 
     Label:
@@ -114,7 +119,7 @@ WindowManager:
     CheckBox:
         group: 'check_blink_time'
         size_hint: (0.3, 1)
-        on_active: root.on_checkbox(self, self.active)
+        on_active: root.on_checkbox(self, self.active, 10)
     
 
 <Notification_bar>:
@@ -148,27 +153,38 @@ WindowManager:
     Button:
         size_hint: (1, 0.4)
         text: 'start'
-        on_release: 
+        on_press: 
             app.root.current= "running" 
+            app.root.on_startpage(*args)
+        on_release:
+            app.root.on_blinkEyeprogram(*args)
+            
            
 
 
 
 <Running_window>:
-    name: 'running'
+    
     BoxLayout:
         padding: [90, 90]
         orientation: 'vertical'
         Label:
+            id: check_eye_num
             padding: [30, 30]
             size_hint: (1, 0.5)
             pos_hint: {'center':1}
             text: 'Running'
+
+ 
+
         Button:
             size_hint: (0.6, 0.1)
             pos_hint:  {'center_x': .5, 'center_y': .5}
             text: 'stop running'
+            on_press:
+                app.root.close_blinkEyeprogram(*args)
             on_release: 
+                
                 app.root.current= 'setting'
                 
 

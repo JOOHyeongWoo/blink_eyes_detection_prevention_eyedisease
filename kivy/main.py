@@ -13,19 +13,24 @@ from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.clock import Clock
+from kivy.uix.camera import Camera
 import cv2
-import mediapipe as mp
+
 import numpy as np
 from keras.models import load_model
 import os
 from scipy.spatial import distance
 import time
-from testmedia import Eye_check
+import threading
+import mediapipe as mp
+from testmedia import Eye_check        #미디아 파이프 버전
+#from testopencvdlip import Eye_check    # opencv dlip 버전
 
 from kivy.garden.notification import Notification
 
 
 fontName = 'NanumGothic.ttf'
+
 class Screen2(GridLayout):
     def __init__(self, **kwargs):
         super(Screen, self).__init__(**kwargs)
@@ -107,40 +112,41 @@ class Screen2(GridLayout):
 
 
 class Setting_window(Screen):
+
     pass
 
 class Running_window(Screen):
+    def changeLabel2(self,closedEyenum):
+        self.get_screen('running').ids.check_eye_num.text= str(closedEyenum)
+        return
+
+    
     pass
 
 class WindowManager(ScreenManager):
-    pass
+    def on_startpage(self,  instance):
+        self.get_screen('running').ids.check_eye_num.text= 'Setting-Time'
 
-class Upper_bar(BoxLayout):
-    def on_change_checknum(self):
-        text = self.ids.checknum_testinput.text
-        self.ids.check_num_slider.value= int(text)
-        print(text)
-    def on_slider_change(self,*args):
-        self.ids.checknum_testinput.text= str(int(args[1]))
-    pass
+    def on_blinkEyeprogram(self,  instance):
+        
+        #self.root.get_screen('running').ids.check_eye_num.text= 'testest'
+        #sm.get_screen('running').ids["check_eye_num"].text= 'test'
+        #sm.get_screen('running').ids.runningwindow.ids["check_eye_num"].text= 'test'
+        #rw.ids.check_eye_num.text='test'
 
-class slider_bar(BoxLayout):  
-    pass
+        #self.get_screen('running').ids.check_eye_num.text= 'testest' # 이것만 성공
+        Eye_check.programstate =True
+        eyecheck_thread = threading.Thread(target=Eye_check.checkblink, args=(self,))
+        eyecheck_thread.setDaemon(True)
+        eyecheck_thread.start()
 
-class Check_minute(BoxLayout):
-    def on_checkbox(self, instance, value):
-        if value:
-            print("checked")
-        else:
-            print("unchecke")
-    pass
+        #Eye_check.checkblink(self)
+        #Clock.schedule_interval(Eye_check.checkblink(self), 1.0/30.0)
 
-class Notification_bar(BoxLayout):
-    def on_notfication_check(self, instance, value, notification):
-        print("check")
-    pass
-       
-class Button_bar(BoxLayout):
+    def close_blinkEyeprogram(self, instace):
+        print("ttt")
+        Eye_check.programstate =False
+        
     def notification(self):
         Notification().open(
             title=" test notification",
@@ -150,11 +156,51 @@ class Button_bar(BoxLayout):
     pass
 
 
-#class Running_blinkeye_check_bar(BoxLayout):
-#    pass
 
-#class Running_blinkeye_button_bar(BoxLayout):
-#    pass
+sm =WindowManager()
+sm.add_widget(Setting_window(name='setting'))
+sm.add_widget(Running_window(name='running'))
+rw=Running_window()
+
+class Upper_bar(BoxLayout):
+    def on_change_checknum(self):
+        text = self.ids.checknum_testinput.text
+        self.ids.check_num_slider.value= int(text)
+        Eye_check.max_blinknum_permin= int(text)
+        print(text)
+    def on_slider_change(self,*args):
+        self.ids.checknum_testinput.text= str(int(args[1]))
+        Eye_check.max_blinknum_permin= int(args[1])
+        
+        
+    pass
+
+class slider_bar(BoxLayout):  
+    pass
+
+class Check_minute(BoxLayout):
+    def on_checkbox(self, instance, value, permin):
+        Eye_check.check_permin= int(permin)
+        print(permin)
+    pass
+
+class Notification_bar(BoxLayout):
+    def on_notfication_check(self, instance, value, notification):
+        print("check")
+    pass
+       
+class Button_bar(BoxLayout):
+
+    pass
+
+
+class Running_blinkeye_check_bar(BoxLayout):
+    
+    pass
+
+class Running_blinkeye_button_bar(BoxLayout):
+
+    pass
 
 class MainApp(App):
     pass

@@ -8,7 +8,7 @@ import time
 
 IMG_SIZE = (34, 26)
 
-model = load_model('blink_eyes_detection_prevention_eyedisease/models/2021_06_02_09_47_46.h5')
+model = load_model('blink_eyes_detection_prevention_eyedisease/check_blinkeye_model/models/2021_06_02_09_47_46.h5')
 model.summary()
 
 class Eye_check:
@@ -21,7 +21,7 @@ class Eye_check:
             263, 249, 390, 373, 374, 380, 381, 382,
             362, 466, 388, 387, 386, 385, 384, 398
         ]
-        self.model = load_model('blink_eyes_detection_prevention_eyedisease/models/2021_05_14_11_27_50.h5')
+        self.model = load_model('blink_eyes_detection_prevention_eyedisease/check_blinkeye_model/models/2021_06_02_09_47_46.h5')
         self.IMG_SIZE = (34, 26)
         self.mp_drawing = mp.solutions.drawing_utils
 
