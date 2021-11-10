@@ -18,13 +18,13 @@ import cv2
 
 import numpy as np
 from keras.models import load_model
-import os
-from scipy.spatial import distance
+#import os
+#from scipy.spatial import distance
 import time
 import threading
-import mediapipe as mp
-from testmedia import Eye_check        #미디아 파이프 버전
-#from testopencvdlip import Eye_check    # opencv dlip 버전
+#import mediapipe as mp
+#from testmedia import Eye_check        #미디아 파이프 버전
+from testopencvdlip import Eye_check    # opencv dlip 버전
 
 from kivy.garden.notification import Notification
 

@@ -6,7 +6,7 @@ from imutils import face_utils
 
 import numpy as np
 from keras.models import load_model
-import os
+#import os
 from scipy.spatial import distance
 import threading
 import time
