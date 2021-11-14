@@ -18,6 +18,7 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.clock import Clock
 from kivy.uix.camera import Camera
 from kivy.lang import Builder
+from kivy.core.text import LabelBase
 import cv2
 
 
@@ -46,7 +47,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-fontName = 'NanumGothic.ttf'
+fontName = resource_path('NanumGothic.ttf')
 
 class Screen2(GridLayout):
     def __init__(self, **kwargs):
@@ -143,7 +144,7 @@ class Running_window(Screen):
 class WindowManager(ScreenManager):
     
     def on_startpage(self,  instance):
-        self.get_screen('running').ids.check_eye_num.text= 'Setting-Time'
+        self.get_screen('running').ids.check_eye_num.text= '개인 눈 세팅중'
 
     def on_blinkEyeprogram(self,  instance):
         
@@ -222,22 +223,17 @@ class Running_blinkeye_button_bar(BoxLayout):
     pass
 
 class MainApp(App):
-    with open('build_exe/kivy/mainn.kv', encoding='utf-8') as f:
-        Builder.load_string(f.read())
-        #Builder.load_file(f.read())
-        #Builder.load_file('build_exe/kivy/mainn.kv')
-    pass
-
-
-class MyApp(App):
-
+    LabelBase.register(name='NanumGothic.ttf', fn_regular=resource_path('NanumGothic.ttf'))
+    
     def build(self):
-        #Eye_check.checkblink()
-        return  Screen2()
+        with open(resource_path('main3.kv'), encoding='utf-8') as f:
+            return Builder.load_string(f.read())
+            
+
+
 
 
 if __name__ == '__main__':
-    #MyApp().run()
     
     MainApp().run()
 

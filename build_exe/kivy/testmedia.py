@@ -7,11 +7,13 @@ import mediapipe as mp
 import numpy as np
 from keras.models import load_model
 import os
+import sys
 from scipy.spatial import distance
 import threading
 import time
 from time import sleep
 from plyer import notification
+
 
 #from kivy.garden.notification import Notification
 
@@ -25,7 +27,7 @@ def resource_path(relative_path):
 
 IMG_SIZE = (34, 26)
 
-model = load_model('2021_06_02_09_47_46.h5') # exe
+model = load_model(resource_path('2021_06_02_09_47_46.h5')) # exe
 #model = load_model('build_exe/kivy/2021_06_02_09_47_46.h5') # pc
 #model = load_model('C:/Users/kkeee/Desktop/hyeongwoo/blinkeyedecetiongit/build_exe/kivy/2021_06_02_09_47_46.h5') # pc
 
@@ -47,7 +49,7 @@ class Eye_check:
             362, 466, 388, 387, 386, 385, 384, 398
         ]
         #self.model = load_model('C:/Users/kkeee/Desktop/hyeongwoo/blinkeyedecetiongit/build_exe/kivy/2021_06_02_09_47_46.h5')
-        self.model = load_model('2021_06_02_09_47_46.h5')
+        self.model = load_model(resource_path('2021_06_02_09_47_46.h5'))
         self.IMG_SIZE = (34, 26)
         self.mp_drawing = mp.solutions.drawing_utils
 
@@ -90,14 +92,18 @@ class Eye_check:
                     face_landmark[idx] = landmark_px
         return face_landmark
 
+    def changeLabel_settingtime(eyeself,self,time):
+        self.get_screen('running').ids.check_eye_num.text= '개인 눈 세팅중: '+ str(time) + '초'
+        return
+
     def changeLabel(eyeself,self,closedEyenum):
-        self.get_screen('running').ids.check_eye_num.text= str(closedEyenum)
+        self.get_screen('running').ids.check_eye_num.text= '눈깜박임 수 : ' + str(closedEyenum)
         return
 
 
     def notification_media(self):
-        title = 'Notification'
-        message= 'Check your blink eye'
+        title = '알림'
+        message= '눈을 깜박여 주세요'
         notification.notify(title= title,
                             message= message,
                             app_icon = None,
@@ -194,7 +200,13 @@ class Eye_check:
                         settingOK = True
                         max_time_point= True 
                     settime = time.time()-start
+                    settime = round(settime,1)
                     settime = str(settime)
+                    changelabel_settingtime_thread = threading.Thread(target=check.changeLabel_settingtime, args=(self,settime)) 
+                    changelabel_settingtime_thread.setDaemon(True)
+                    changelabel_settingtime_thread.start()
+                    changelabel_settingtime_thread.join()
+
                     max_l = pred_l if pred_l > max_l else max_l
                     max_r = pred_r if pred_r > max_r else max_r
                     min_l = pred_l if pred_l < min_l else min_l
@@ -202,6 +214,7 @@ class Eye_check:
                     sum_l += pred_l
                     sum_r += pred_r
                     countnum +=1
+                    
                 elif check_setting == False:
                     #cv2.putText(eye_image, "check setting", (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
                     max_l = 0.1
@@ -232,10 +245,9 @@ class Eye_check:
                     print(closedEyenum)
                     
 
-
-                    
                 elif repred_l >predsize_l*max_l and repred_r >predsize_r*max_r and checkOpen == False :
                     checkOpen = True
+                    print("이상하네")
 
                 state_l = state_l % repred_l
                 state_r = state_r % repred_r
@@ -243,7 +255,7 @@ class Eye_check:
                 if max_time_point== True:
                     start=time.time()
                     max_time_point= False
-                if time.time() -start> check.check_permin :
+                if time.time() -start> (check.check_permin*60) :
                     if closedEyenum < check.max_blinknum_permin :
                         """
                         notification_thread = threading.Thread(target=WindowManager.notification, args=(self,)) 
@@ -269,14 +281,3 @@ class Eye_check:
         return
      
 
-"""
-class MainAppp(App):
-    def build(self):
-        Eye_check.checkblink()
-       
-
-if __name__ == '__main__':
-    MainAppp().run()
-    
-
-"""
