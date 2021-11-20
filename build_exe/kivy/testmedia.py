@@ -15,8 +15,6 @@ from time import sleep
 from plyer import notification
 
 
-#from kivy.garden.notification import Notification
-
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -28,8 +26,6 @@ def resource_path(relative_path):
 IMG_SIZE = (34, 26)
 
 model = load_model(resource_path('2021_06_02_09_47_46.h5')) # exe
-#model = load_model('build_exe/kivy/2021_06_02_09_47_46.h5') # pc
-#model = load_model('C:/Users/kkeee/Desktop/hyeongwoo/blinkeyedecetiongit/build_exe/kivy/2021_06_02_09_47_46.h5') # pc
 
 
 model.summary()
@@ -48,7 +44,6 @@ class Eye_check:
             263, 249, 390, 373, 374, 380, 381, 382,
             362, 466, 388, 387, 386, 385, 384, 398
         ]
-        #self.model = load_model('C:/Users/kkeee/Desktop/hyeongwoo/blinkeyedecetiongit/build_exe/kivy/2021_06_02_09_47_46.h5')
         self.model = load_model(resource_path('2021_06_02_09_47_46.h5'))
         self.IMG_SIZE = (34, 26)
         self.mp_drawing = mp.solutions.drawing_utils
@@ -91,6 +86,10 @@ class Eye_check:
                 if landmark_px:
                     face_landmark[idx] = landmark_px
         return face_landmark
+
+    def changeLabel_checkface(eyeself,self,num):
+        self.get_screen('running').ids.check_eye_num.text= '얼굴 인식 실패 카메라를 응시해 주세요 '
+        return
 
     def changeLabel_settingtime(eyeself,self,time):
         self.get_screen('running').ids.check_eye_num.text= '개인 눈 세팅중: '+ str(time) + '초'
@@ -141,7 +140,6 @@ class Eye_check:
 
         max_time_point=False
 
-        
         while cap.isOpened():
             ret, image = cap.read()
 
@@ -156,7 +154,6 @@ class Eye_check:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             results = face_mesh.process(image)
-            #results = face_mesh.process(gray)
 
         
             image.flags.writeable = True
@@ -168,9 +165,7 @@ class Eye_check:
             if results.multi_face_landmarks:
             
                 idx_to_coordinates = check.landmark_dict(results, width, height)
-                
-
-            
+ 
                 eye_np = check.to_ndarray(idx_to_coordinates)
 
                 
@@ -184,12 +179,16 @@ class Eye_check:
                 eye_input_l = eye_img_l.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
                 eye_input_r = eye_img_r.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
                 
-                
-
                 pred_l = model.predict(eye_input_l)
                 pred_r = model.predict(eye_input_r)
 
                 check_setting = True
+            else:
+                check_setting =False
+                settingOK= False
+                closedEyenum = 0
+  
+                check.changeLabel_checkface(self,True)
 
             if settingOK == False :
                 if check_setting == True :
@@ -202,10 +201,8 @@ class Eye_check:
                     settime = time.time()-start
                     settime = round(settime,1)
                     settime = str(settime)
-                    changelabel_settingtime_thread = threading.Thread(target=check.changeLabel_settingtime, args=(self,settime)) 
-                    changelabel_settingtime_thread.setDaemon(True)
-                    changelabel_settingtime_thread.start()
-                    changelabel_settingtime_thread.join()
+                
+                    check.changeLabel_settingtime(self,settime)
 
                     max_l = pred_l if pred_l > max_l else max_l
                     max_r = pred_r if pred_r > max_r else max_r
@@ -216,7 +213,6 @@ class Eye_check:
                     countnum +=1
                     
                 elif check_setting == False:
-                    #cv2.putText(eye_image, "check setting", (20,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
                     max_l = 0.1
                     max_r = 0.1
                     timepoint =1
@@ -239,15 +235,13 @@ class Eye_check:
                 if repred_l <predsize_l*max_l and repred_r <predsize_r*max_r and checkOpen == True :
                     checkOpen = False
                     closedEyenum += 1
-                    changelabel_thread = threading.Thread(target=check.changeLabel, args=(self,closedEyenum)) 
-                    changelabel_thread.setDaemon(True)
-                    changelabel_thread.start()
+                    check.changeLabel(self,closedEyenum)
                     print(closedEyenum)
                     
 
                 elif repred_l >predsize_l*max_l and repred_r >predsize_r*max_r and checkOpen == False :
                     checkOpen = True
-                    print("이상하네")
+                    
 
                 state_l = state_l % repred_l
                 state_r = state_r % repred_r
@@ -257,17 +251,11 @@ class Eye_check:
                     max_time_point= False
                 if time.time() -start> (check.check_permin*60) :
                     if closedEyenum < check.max_blinknum_permin :
-                        """
-                        notification_thread = threading.Thread(target=WindowManager.notification, args=(self,)) 
-                        notification_thread.setDaemon(True)
-                        notification_thread.start()
-                        """
-                        #WindowManager.notification(self)
                         check.notification_media()
                         start=time.time()
                         closedEyenum = 0
                         max_time_point= True
-                        print("ppppppppppppp")
+                        
             
                
             
