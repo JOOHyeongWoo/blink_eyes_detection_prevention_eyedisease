@@ -23,9 +23,10 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-IMG_SIZE = (34, 26)
+I_SIZE = (34, 26)
 
-model = load_model(resource_path('2021_06_02_09_47_46.h5')) # exe
+#model = load_model(resource_path('2021_06_02_09_47_46.h5')) 
+model = load_model('2021_06_02_09_47_46.h5')
 
 
 model.summary()
@@ -44,17 +45,18 @@ class Eye_check:
             263, 249, 390, 373, 374, 380, 381, 382,
             362, 466, 388, 387, 386, 385, 384, 398
         ]
-        self.model = load_model(resource_path('2021_06_02_09_47_46.h5'))
-        self.IMG_SIZE = (34, 26)
+        #self.model = load_model(resource_path('2021_06_02_09_47_46.h5'))
+        self.model = load_model('2021_06_02_09_47_46.h5')
+        self.I_SIZE = (34, 26)
         self.mp_drawing = mp.solutions.drawing_utils
 
-    def crop_eye(self, img, eye_points):
+    def cut_eye(self, img, eye_points):
         x1, y1 = np.amin(eye_points, axis=0)
         x2, y2 = np.amax(eye_points, axis=0)
         cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
 
         w = (x2 - x1) * 1.2
-        h = w * self.IMG_SIZE[1] / self.IMG_SIZE[0]
+        h = w * self.I_SIZE[1] / self.I_SIZE[0]
 
         margin_x, margin_y = w / 2, h / 2
 
@@ -67,13 +69,13 @@ class Eye_check:
         return eye_img, eye_rect
 
 
-    def to_ndarray(self, dict):
+    def n_array(self, dict):
         return np.array([x for i, x in dict.items() if i in self.Landmark_eye])
 
   
-    def eye_drawing(self, landmark_dict, eye_image):
+    def eye_drawing(self, landmark_dict, eye_img):
         for i in self.Landmark_eye:  
-            cv2.circle(eye_image, landmark_dict[i], 1, (0, 0, 255), -1)
+            cv2.circle(eye_img, landmark_dict[i], 1, (0, 0, 255), -1)
     
 
     def landmark_dict(self, results, width, height):
@@ -141,7 +143,7 @@ class Eye_check:
         max_time_point=False
 
         while cap.isOpened():
-            ret, image = cap.read()
+            ret, img = cap.read()
 
             if not ret:
                 print("End frame")
@@ -151,33 +153,33 @@ class Eye_check:
             check_setting = False
 
         
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            results = face_mesh.process(image)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            results = face_mesh.process(img)
 
         
-            image.flags.writeable = True
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            img.flags.writeable = True
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
         
-            eye_image = image.copy()
+            eye_img = img.copy()
 
             if results.multi_face_landmarks:
             
                 idx_to_coordinates = check.landmark_dict(results, width, height)
  
-                eye_np = check.to_ndarray(idx_to_coordinates)
+                eye_np = check.n_array(idx_to_coordinates)
 
                 
-                eye_img_l, eye_rect_l = check.crop_eye(gray, eye_points=eye_np[3:13])  
-                eye_img_r, eye_rect_r = check.crop_eye(gray, eye_points=eye_np[19:29])  
+                eye_img_l, eye_rect_l = check.cut_eye(gray, eye_points=eye_np[3:13])  
+                eye_img_r, eye_rect_r = check.cut_eye(gray, eye_points=eye_np[19:29])  
                 
-                eye_img_l = cv2.resize(eye_img_l, dsize=IMG_SIZE)
-                eye_img_r = cv2.resize(eye_img_r, dsize=IMG_SIZE)
+                eye_img_l = cv2.resize(eye_img_l, dsize=I_SIZE)
+                eye_img_r = cv2.resize(eye_img_r, dsize=I_SIZE)
                 eye_img_r = cv2.flip(eye_img_r, flipCode=1)
 
-                eye_input_l = eye_img_l.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
-                eye_input_r = eye_img_r.copy().reshape((1, IMG_SIZE[1], IMG_SIZE[0], 1)).astype(np.float32) / 255.
+                eye_input_l = eye_img_l.copy().reshape((1, I_SIZE[1], I_SIZE[0], 1)).astype(np.float32) / 255.
+                eye_input_r = eye_img_r.copy().reshape((1, I_SIZE[1], I_SIZE[0], 1)).astype(np.float32) / 255.
                 
                 pred_l = model.predict(eye_input_l)
                 pred_r = model.predict(eye_input_r)
@@ -223,10 +225,10 @@ class Eye_check:
                 max_l = sum_l/countnum
                 max_r = sum_r/countnum
 
-                repred_l = pred_l #* (1/max_l)
-                repred_r = pred_r #* (1/max_r)
-                predsize_l = 0.1 #(1 -max_l) *0.9
-                predsize_r = 0.1 #(1 -max_r) *0.9
+                repred_l = pred_l 
+                repred_r = pred_r 
+                predsize_l = 0.1 
+                predsize_r = 0.1 
 
                 state_l = 'open %.2f' if repred_l > predsize_l*max_l  else 'close %.2f'
                 state_r = 'open %.2f' if repred_r > predsize_r*max_r  else 'close %.2f'
