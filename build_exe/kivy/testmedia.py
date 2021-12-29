@@ -72,10 +72,6 @@ class Eye_check:
     def n_array(self, dict):
         return np.array([x for i, x in dict.items() if i in self.Landmark_eye])
 
-  
-    def eye_drawing(self, landmark_dict, eye_img):
-        for i in self.Landmark_eye:  
-            cv2.circle(eye_img, landmark_dict[i], 1, (0, 0, 255), -1)
     
 
     def landmark_dict(self, results, width, height):
@@ -146,7 +142,6 @@ class Eye_check:
             ret, img = cap.read()
 
             if not ret:
-                print("End frame")
                 eye_list.append(int(eye_cnt / 2))
                 break
 

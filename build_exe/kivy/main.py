@@ -80,7 +80,6 @@ class WindowManager(ScreenManager):
             message= " test notification",
             timeout = 2
         )
-        print("testtest")
     pass
 
 
@@ -95,7 +94,7 @@ class Upper_bar(BoxLayout):
         text = self.ids.checknum_testinput.text
         self.ids.check_num_slider.value= int(text)
         Eye_check.max_blinknum_permin= int(text)
-        print(text)
+        
     def on_slider_change(self,*args):
         self.ids.checknum_testinput.text= str(int(args[1]))
         Eye_check.max_blinknum_permin= int(args[1])
@@ -109,12 +108,12 @@ class slider_bar(BoxLayout):
 class Check_minute(BoxLayout):
     def on_checkbox(self, instance, value, permin):
         Eye_check.check_permin= int(permin)
-        print(permin)
+        
     pass
 
 class Notification_bar(BoxLayout):
     def on_notfication_check(self, instance, value, notification):
-        print("check")
+        print()
     pass
        
 class Button_bar(BoxLayout):
